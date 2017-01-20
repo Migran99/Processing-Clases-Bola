@@ -5,10 +5,21 @@
  */
 Pelota[] miPelota = new Pelota[20];
 
+float play_posx = 0;
+float play_posy  0;
+
 void setup() {
   size (800, 800);
+  for (int i=0; i< miPelota.length/2; i++) {
+    miPelota[i]= new Pelota(width*(i+1)/(miPelota.length/2 +1),height*1/3 ,i);
+  }
+
+  for (int i=0; i< miPelota.length/2; i++) {
+    miPelota[i+(miPelota.length/2)]= new Pelota(width*(i+1)/(miPelota.length/2 +1),height*2/3 ,i + miPelota.length/2);
+  }
+  
   for (int i=0; i< miPelota.length; i++) {
-    miPelota[i]= new Pelota(width*i/miPelota.length +10, i);
+    println(miPelota[i].xpos);
   }
 }
 
@@ -19,6 +30,7 @@ void draw() {
     //miPelota[i].crecer();
     miPelota[i].display();
     miPelota[i].rebotar();
+    dibujar_player();
   }
 }
 
@@ -26,6 +38,8 @@ float distanceto(int x1, int y1, int x2, int y2) {
   return sqrt(sq(x1-x2) + sq(y1-y2));
 }
 
+
+//////////////////////
 class Pelota {
   // DATOS 
   float xpos;  // posicion x de la pelota
@@ -41,11 +55,11 @@ class Pelota {
   int id;
 
   // CONSTRUCTOR
-  Pelota(float xposTemp, int idTemp) {
+  Pelota(float xposTemp, float yposTemp, int idTemp) {
     c=color (255);
     xpos=xposTemp;
     id = idTemp;
-    ypos=height/2;
+    ypos=yposTemp;
     vx=random(-5, 5);
     vy=random(-5, 5); 
     diameter= random (20, 30);
@@ -89,3 +103,17 @@ class Pelota {
     }
   }
 }
+//////////////////////
+
+void dibujar_player(){
+  fill(255, 100, 50);
+  strokeWeight(20);
+  ellipse(play_posx,play_posy,50,50);
+}
+
+void mover_player(){
+  play_posx = mouseX;
+  play_posy = mouseY;
+  
+}
+
