@@ -14,6 +14,14 @@ PFont font1;
 int fps = 60;
 
 int pantalla = 0;
+int puntos = 0;
+int pause_time = 0;
+
+Table score_table;
+Boolean puntos_compr = false;
+Boolean typing = false;
+String input = "";
+int typingin = 0;
 
 
 void setup() {
@@ -32,11 +40,32 @@ void setup() {
   }
 
   font1 = createFont("Califa-Italic-16", 16, true);
+
+  if (!fileExists(sketchPath("scores.csv"))) {
+    score_table = new Table();
+    score_table.addColumn();
+    score_table.addColumn();
+    score_table.addRow();
+    score_table.addRow();
+    score_table.addRow();
+
+    score_table.setString(0, 0, "Player1" );
+    score_table.setString(1, 0, "Player2" );
+    score_table.setString(2, 0, "Player3" );
+
+    score_table.setInt(0, 1, 0);
+    score_table.setInt(1, 1, 0);
+    score_table.setInt(2, 1, 0);
+    saveTable(score_table, "scores.csv");
+    println("File Created");
+  } else {
+    println("File found");
+    println("Loading File");
+    score_table = loadTable("scores.csv");
+  }
 }
 
 void draw() {
-  background(255-vidas*10, 100, 100);
-
   switch (pantalla) {
   case 0: 
     menu();
@@ -47,6 +76,9 @@ void draw() {
 
   case 2:
     perder();
+    break;
+  case 3:
+    pausa();
     break;
   }
 }
@@ -137,6 +169,7 @@ void dibujar_player() {
 void mover_player() {
   play_posx = mouseX;
   play_posy = mouseY;
+  puntos = millis()/1000 - pause_time;
 }
 
 void colision_player() {
@@ -149,25 +182,24 @@ void colision_player() {
     }
   }
 
-  if (vidas == 0) {
+  if (vidas <= 0) {
     pantalla = 2;
   }
 }
 
 void hud() {
   textFont(font1, height/9);  //Seleccionamos la fuente del texto            
-  fill(255);
+  fill(200);
   textAlign(LEFT); //La alineacion del texto con la posicion que demos
   text("Vidas:" + vidas, 0, height/9);
-
   textAlign(RIGHT); //La alineacion del texto con la posicion que demos
-  text("Tiempo:" + millis()/1000, width, height/9);
+  text("Tiempo:" + puntos, width, height/9);
 }
 
 void jugar() {
+  background(255-vidas*10, 100, 100);
   for (int i=0; i< miPelota.length; i++) {
     miPelota[i].move();
-    //miPelota[i].crecer();
     miPelota[i].display();
     miPelota[i].rebotar();
   }
@@ -176,38 +208,138 @@ void jugar() {
   mover_player();
   colision_player();
   hud();
+
+  textFont(font1, 16); 
+  fill(200);
+  textAlign(LEFT);
+  text("Pulsa P para pausar", width-textWidth("Pulsa P para pausar:"), height-16);
 }
 
 void menu() {
   background(75);
   textFont(font1, height/5);  //Seleccionamos la fuente del texto            
-  fill(125);
+  fill(200, 100, 100);
   textAlign(CENTER); //La alineacion del texto con la posicion que demos
   text("BOUNCE", width/2, height/4); //Dibujamos el string que queramos (PONG en este caso)
   fill(200);
+  strokeWeight(2);
   rect(0, height/2, width, height/6);
   textFont(font1, height/6); 
-  fill(125);
+  fill(200, 100, 100);
   text("PLAY", width/2, height/2 + height/6 - height/50);
   textFont(font1, 16); 
-  fill(500);
+  fill(200);
   textAlign(LEFT);
   text("Miguel Granero", width-textWidth("Miguel Granero:"), height-16);
+  dibujar_player();
+  mover_player();
 }
 
 void perder() {
   background(75);
-  textFont(font1, height/5);        
-  fill(125);
-  textAlign(CENTER);
-  for (int i = 1; i<=3; i++) {
-    text(i, width/10, height*i/4);
+  if (puntos_compr) {
+    textFont(font1, height/5);        
+    fill(125);
+    textAlign(LEFT);
+    for (int i = 0; i<3; i++) {
+      text(score_table.getString(i, 0), 5, height*(i+1)/4);
+    }
+    fill(200);
+    for (int i = 0; i<3; i++) {
+      text(score_table.getInt(i, 1), 50 + textWidth(score_table.getString(i, 0)), height*(i+1)/4);
+    }
+  } else {
+    comprobar_puntos();
   }
+  textFont(font1, 16); 
+  text("Pulsa C para salir", width-textWidth("Pulsa c para salir:"), height-16);
+  if (typing) {
+    textAlign(LEFT);
+    text("Escribiendo...", 5, height-16);
+  }
+}
+
+void pausa() {
+  background(255-vidas*10, 100, 100);
+  dibujar_player();
+  hud();
+  for (int i=0; i< miPelota.length; i++) {
+    miPelota[i].display();
+  }
+
+  textFont(font1, 16); 
+  fill(200);
+  textAlign(LEFT);
+  text("El raton debe estar sobre la bola para despausar", width-textWidth("El raton debe estar sobre la bola para despausar:"), height-16);
+
+  pause_time = millis()/1000 - puntos;
 }
 
 
 
+boolean fileExists(String path) { //Bloque para averiguar si existe un archivo
+  File file=new File(path);
+  println(file.getName());
+  boolean exists = file.exists();
+  if (exists) {
+    println("true");
+    return true;
+  } else {
+    println("false");
+    return false;
+  }
+} 
 
+void comprobar_puntos() {
+  if (puntos > score_table.getInt(2, 1) && !typing) {
+    if (puntos > score_table.getInt(1, 1)) {
+      if (puntos > score_table.getInt(0, 1)) {
+        score_table.setInt(0, 1, puntos);
+        typing = true;
+        typingin = 0;
+      } else {
+        score_table.setInt(1, 1, puntos);
+        typing = true;
+        typingin = 1;
+      }
+    } else {
+      score_table.setInt(2, 1, puntos);
+      typing = true;
+      typingin = 2;
+    }
+  }
+}
+
+void keyPressed() {
+  if (!typing) {
+    switch(key) {
+    case 'p':
+      if (pantalla == 1) pantalla = 3;
+      else if (pantalla ==3 && distanceto(mouseX, mouseY, (int)play_posx, (int)play_posy) < player_radio) pantalla = 1;
+      break;
+    case 'c':
+      exit();
+      break;
+    }
+  } else {
+    if (key==BACKSPACE) {
+      if (input.length()>0) {
+        input=input.substring(0, input.length()-1);
+      } // if
+    } // if
+    else if (key==RETURN || key==ENTER) {
+      println ("ENTER");
+      score_table.setString(typingin, 0, input);
+      typing = false;
+      input = "";
+      saveTable(score_table, "scores.csv");
+      puntos_compr = true;
+    } else {
+      input+=key;
+    }
+    println (input);
+  }
+}
 
 void mousePressed() {
   switch(pantalla) {
