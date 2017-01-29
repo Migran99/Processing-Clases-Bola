@@ -12,6 +12,10 @@ int vidas = 5;
 
 PFont font1;
 int fps = 60;
+
+int pantalla = 0;
+
+
 void setup() {
   size (500, 500);
   frameRate(fps);
@@ -31,18 +35,20 @@ void setup() {
 }
 
 void draw() {
-  background(255);
-  for (int i=0; i< miPelota.length; i++) {
-    miPelota[i].move();
-    //miPelota[i].crecer();
-    miPelota[i].display();
-    miPelota[i].rebotar();
-  }
+  background(255-vidas*10, 100, 100);
 
-  dibujar_player();
-  mover_player();
-  colision_player();
-  hud();
+  switch (pantalla) {
+  case 0: 
+    menu();
+    break;
+  case 1: 
+    jugar();
+    break;
+
+  case 2:
+    perder();
+    break;
+  }
 }
 
 float distanceto(int x1, int y1, int x2, int y2) {
@@ -123,7 +129,7 @@ class Pelota {
 //////////////////////
 
 void dibujar_player() {
-  fill(255, 100, 50);
+  fill(255 - vidas*20, 50, 50);
   strokeWeight(4);
   ellipse(play_posx, play_posy, 2*player_radio, 2*player_radio);
 }
@@ -144,16 +150,70 @@ void colision_player() {
   }
 
   if (vidas == 0) {
-    exit();
+    pantalla = 2;
   }
 }
 
 void hud() {
   textFont(font1, height/9);  //Seleccionamos la fuente del texto            
-  fill(255, 100, 50);
+  fill(255);
   textAlign(LEFT); //La alineacion del texto con la posicion que demos
   text("Vidas:" + vidas, 0, height/9);
 
   textAlign(RIGHT); //La alineacion del texto con la posicion que demos
   text("Tiempo:" + millis()/1000, width, height/9);
+}
+
+void jugar() {
+  for (int i=0; i< miPelota.length; i++) {
+    miPelota[i].move();
+    //miPelota[i].crecer();
+    miPelota[i].display();
+    miPelota[i].rebotar();
+  }
+
+  dibujar_player();
+  mover_player();
+  colision_player();
+  hud();
+}
+
+void menu() {
+  background(75);
+  textFont(font1, height/5);  //Seleccionamos la fuente del texto            
+  fill(125);
+  textAlign(CENTER); //La alineacion del texto con la posicion que demos
+  text("BOUNCE", width/2, height/4); //Dibujamos el string que queramos (PONG en este caso)
+  fill(200);
+  rect(0, height/2, width, height/6);
+  textFont(font1, height/6); 
+  fill(125);
+  text("PLAY", width/2, height/2 + height/6 - height/50);
+  textFont(font1, 16); 
+  fill(500);
+  textAlign(LEFT);
+  text("Miguel Granero", width-textWidth("Miguel Granero:"), height-16);
+}
+
+void perder() {
+  background(75);
+  textFont(font1, height/5);        
+  fill(125);
+  textAlign(CENTER);
+  for (int i = 1; i<=3; i++) {
+    text(i, width/10, height*i/4);
+  }
+}
+
+
+
+
+
+void mousePressed() {
+  switch(pantalla) {
+  case 0:
+    if (mouseY < height/2 + height/6 && mouseY > height/2 && pantalla == 0) {
+      pantalla=1; //Si pulsamos el boton del menu entramos al juego
+    }
+  }
 }
