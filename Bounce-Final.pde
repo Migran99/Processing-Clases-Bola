@@ -26,6 +26,40 @@ int typingin = 0;
 
 void setup() {
   size (500, 500);
+  frameRate(fps);/* 
+ Codigo original: Jose Pujol
+ Modificado por: Miguel Granero Ramos
+   ++Añadidos: Tabla puntuaciones, colisiones, jugador, pantallas, puntuacion, manejo de archivos, introduccion de texto, etc.
+ IES Vicente Aleixandre 2017
+ */
+Pelota[] miPelota = new Pelota[20]; //Creamos el objeto miPelota
+
+//Variables para el jugador
+float play_posx = 0;
+float play_posy = 0;
+int player_radio = 12;
+int vidas = 5;
+
+//Variables para el juego
+PFont font1;
+int fps = 60;
+int pantalla = 0;
+
+//Contadores de tiempo y puntuacion
+int puntos = 0;
+int pause_time = 0;
+
+//Creamos el objeto tabla para la tabla de puntuaciones asi como las variables que usaremos para su funcionamiento
+Table score_table;
+Boolean puntos_compr = false;
+Boolean typing = false;
+String input = "";
+int typingin = 0;
+
+
+void setup() {
+  //Iniciamos parametros y creamos las bolas
+  size (500, 500);
   frameRate(fps);
   for (int i=0; i< miPelota.length/2; i++) {
     miPelota[i]= new Pelota(width*(i+1)/(miPelota.length/2 +1), height*1/3, i);
@@ -39,8 +73,9 @@ void setup() {
     println(miPelota[i].xpos);
   }
 
-  font1 = createFont("Califa-Italic-16", 16, true);
+  font1 = createFont("Califa-Italic-16", 16, true); //Creamos la fuente que utilizaremos
 
+  //Comprobamos si existe el archivo scores.csv (tabla de puntuaciones). Si no, lo creamos
   if (!fileExists(sketchPath("scores.csv"))) {
     score_table = new Table();
     score_table.addColumn();
@@ -65,7 +100,7 @@ void setup() {
   }
 }
 
-void draw() {
+void draw() {//En funcion de la pantalla ejecutaremos un bloque u otro
   switch (pantalla) {
   case 0: 
     menu();
@@ -83,12 +118,12 @@ void draw() {
   }
 }
 
-float distanceto(int x1, int y1, int x2, int y2) {
+float distanceto(int x1, int y1, int x2, int y2) { //Para averiguar la distancia entre dos puntos
   return sqrt(sq(x1-x2) + sq(y1-y2));
 }
 
 
-//////////////////////
+//////////////////////Clase pelota
 class Pelota {
   // DATOS 
   float xpos;  // posicion x de la pelota
@@ -140,11 +175,7 @@ class Pelota {
       }
     }
   }
-  // crece
-  void crecer() {
-    diameter=diameter+0.01;
-  }
-
+  // rebote
   void rebotar() {
     if (alive) {
       for (int i=0; i < miPelota.length; i++) {
@@ -157,7 +188,7 @@ class Pelota {
       }
     }
   }
-
+  //fusion
   void fusionar() {
     if (alive) {
       for (int i=0; i < miPelota.length; i++) {
@@ -175,18 +206,18 @@ class Pelota {
 }
 //////////////////////
 
-void dibujar_player() {
+void dibujar_player() { //Dibujamos al jugador
   fill(255 - vidas*20, 50, 50);
   strokeWeight(4);
   ellipse(play_posx, play_posy, 2*player_radio, 2*player_radio);
 }
 
-void mover_player() {
+void mover_player() { //Movemos al jugador
   play_posx = mouseX;
   play_posy = mouseY;
 }
 
-void colision_player() {
+void colision_player() { //Detectamos la colision de las bolas con el jugador
   for (int i = 0; i<miPelota.length; i++) {
     if (distanceto((int)play_posx, (int)play_posy, (int)miPelota[i].xpos, (int)miPelota[i].ypos) < (player_radio*2+miPelota[i].diameter)/2 && miPelota[i].alive) {
       println("Perdiste wey");
@@ -201,7 +232,7 @@ void colision_player() {
   }
 }
 
-void hud() {
+void hud() { //Pintamos el HUD del juego
   textFont(font1, height/9);  //Seleccionamos la fuente del texto            
   fill(200);
   textAlign(LEFT); //La alineacion del texto con la posicion que demos
@@ -210,7 +241,7 @@ void hud() {
   text("Tiempo:" + puntos, width, height/9);
 }
 
-void jugar() {
+void jugar() { //Bloque para la pantalla del juego
   background(255-vidas*10, 100, 100);
   for (int i=0; i< miPelota.length; i++) {
     miPelota[i].move();
@@ -232,7 +263,7 @@ void jugar() {
   puntos = millis()/1000 - pause_time;
 }
 
-void menu() {
+void menu() { //Bloque para el menu inicial
   background(75);
   textFont(font1, height/5);  //Seleccionamos la fuente del texto            
   fill(200, 100, 100);
@@ -253,9 +284,9 @@ void menu() {
   pause_time = millis()/1000 - puntos;
 }
 
-void perder() {
+void perder() { //Cuando perdamos se activara este bloque
   background(75);
-  if (puntos_compr) {
+  if (puntos_compr) { //Si hemos comprobado puntos pintamos la tabla
     textFont(font1, height/5);        
     fill(125);
     textAlign(LEFT);
@@ -266,18 +297,18 @@ void perder() {
     for (int i = 0; i<3; i++) {
       text(score_table.getInt(i, 1), 50 + textWidth(score_table.getString(i, 0)), height*(i+1)/4);
     }
-  } else {
+  } else { //Si no, comprobamos
     comprobar_puntos();
   }
   textFont(font1, 16); 
   text("Pulsa C para salir", width-textWidth("Pulsa c para salir:"), height-16);
   if (typing) {
     textAlign(LEFT);
-    text("Escribiendo...: " + input, 5, height-16);
+    text("Escribiendo...: " + input, 5, height-16); //SI estamos escribiendo lo mostramos en pantalla
   }
 }
 
-void pausa() {
+void pausa() { //Bloque para la pausa en juego
   background(255-vidas*10, 100, 100);
   dibujar_player();
   hud();
@@ -308,7 +339,7 @@ boolean fileExists(String path) { //Bloque para averiguar si existe un archivo
   }
 } 
 
-void comprobar_puntos() {
+void comprobar_puntos() { //Bloque en el comprobamos los puntos del jugador. Vemos si ha superado alguna puntuacion mejor
   if (!typing) {
     if (puntos > score_table.getInt(2, 1)) {
       if (puntos > score_table.getInt(1, 1)) {
@@ -339,7 +370,7 @@ void comprobar_puntos() {
 }
 
 void keyPressed() {
-  if (!typing) {
+  if (!typing) { //Para la pausa y la salida
     switch(key) {
     case 'p':
       if (pantalla == 1) pantalla = 3;
@@ -349,13 +380,13 @@ void keyPressed() {
       exit();
       break;
     }
-  } else {
-    if (key==BACKSPACE) {
+  } else { //Para escribir nuestro nombre en la tabla de puntuaciones
+    if (key==BACKSPACE) { //Podemos borrar caracteres
       if (input.length()>0) {
         input=input.substring(0, input.length()-1);
       } // if
     } // if
-    else if (key==RETURN || key==ENTER) {
+    else if (key==RETURN || key==ENTER) { //Finalizamos el nombre con un ENTER
       println ("ENTER");
       score_table.setString(typingin, 0, input);
       typing = false;
@@ -369,7 +400,7 @@ void keyPressed() {
   }
 }
 
-void mousePressed() {
+void mousePressed() { //Para el boton en el menu principal de juego
   switch(pantalla) {
   case 0:
     if (mouseY < height/2 + height/6 && mouseY > height/2 && pantalla == 0) {
