@@ -356,8 +356,8 @@ void keyPressed() {
     if (key==BACKSPACE) { //Podemos borrar caracteres
       if (input.length()>0) {
         input=input.substring(0, input.length()-1);
-      } // if
-    } // if
+      }
+    }
     else if (key==RETURN || key==ENTER) { //Finalizamos el nombre con un ENTER
       println ("ENTER");
       score_table.setString(typingin, 0, input);
