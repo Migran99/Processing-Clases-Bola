@@ -1,32 +1,4 @@
 /* 
- Ejemplo de como crear un objeto basado en clases
- Conceptos: constructor con argumentos
- Clases tipo array
- */
-Pelota[] miPelota = new Pelota[20];
-
-float play_posx = 0;
-float play_posy = 0;
-int player_radio = 12;
-int vidas = 5;
-
-PFont font1;
-int fps = 60;
-
-int pantalla = 0;
-int puntos = 0;
-int pause_time = 0;
-
-Table score_table;
-Boolean puntos_compr = false;
-Boolean typing = false;
-String input = "";
-int typingin = 0;
-
-
-void setup() {
-  size (500, 500);
-  frameRate(fps);/* 
  Codigo original: Jose Pujol
  Modificado por: Miguel Granero Ramos
    ++Añadidos: Tabla puntuaciones, colisiones, jugador, pantallas, puntuacion, manejo de archivos, introduccion de texto, etc.
